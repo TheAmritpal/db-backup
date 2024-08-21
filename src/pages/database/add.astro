@@ -1,0 +1,80 @@
+---
+import AdminLayout from "@/layouts/AdminLayout.astro";
+---
+
+<AdminLayout>
+    <div class="container-fluid">
+
+        <!-- start page title -->
+        <div class="row">
+            <div class="col-12">
+                <div class="page-title-box d-sm-flex align-items-center justify-content-between bg-galaxy-transparent">
+                    <h4 class="mb-sm-0">Database</h4>
+
+                    <div class="page-title-right">
+                        <ol class="breadcrumb m-0">
+                            <li class="breadcrumb-item"><a href="/database">Database</a></li>
+                            <li class="breadcrumb-item active">add</li>
+                        </ol>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <!-- end page title -->
+
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header align-items-center d-flex">
+                        <h4 class="card-title mb-0 flex-grow-1">Add Database</h4>
+                    </div><!-- end card header -->
+
+                    <div class="card-body">
+                        <div class="live-preview">
+                            <form class="row g-3 needs-validation" id="addDatabaseForm" novalidate autocomplete="off">
+                                <div class="col-md-4">
+                                    <label for="validationCustom01" class="form-label">Host</label>
+                                    <input type="text" class="form-control" id="validationCustom01" name="host" autocomplete="off" placeholder="93.12.23.xx" required>
+                                    <div class="valid-feedback">
+                                        Looks good!
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="user" class="form-label">User</label>
+                                    <input type="text" class="form-control" id="user" name="user" autocomplete="off" placeholder="user" required>
+                                    <div class="valid-feedback">
+                                        Looks good!
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="pass" class="form-label">Password</label>
+                                    <input type="password" class="form-control" id="pass" name="password" autocomplete="off" placeholder="**********" required>
+                                    <div class="valid-feedback">
+                                        Looks good!
+                                    </div>
+                                </div>
+                                <div class="col-md-4 d-none ">
+                                    <label for="validationCustom04" class="form-label">Database</label>
+                                    <select class="form-select" id="validationCustom04" required>
+                                        <option selected disabled value="">Choose Database...</option>
+                                        <option>...</option>
+                                    </select>
+                                    <div class="invalid-feedback">
+                                        Please select a valid state.
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <button class="btn btn-primary" type="submit">Fetch Database</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- end col -->
+
+        </div>
+
+    </div> <!-- container-fluid -->
+</AdminLayout>
