@@ -1,11 +1,11 @@
-import { datetime, mysqlTable, varchar } from "drizzle-orm/mysql-core";
-import * as schema from "@/db/schema";
+import { int, datetime, mysqlTable, varchar } from "drizzle-orm/mysql-core";
+import { user } from "./user.schema";
 
 export const session = mysqlTable("session", {
   id: varchar("id", { length: 255 }).primaryKey(),
-  userId: varchar("user_id", { length: 255 })
+  userId: int("user_id")
     .notNull()
-    .references(() => schema.admin.id),
+    .references(() => user.id),
   expiresAt: datetime("expires_at").notNull(),
 });
 

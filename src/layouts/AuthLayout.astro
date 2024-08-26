@@ -12,6 +12,9 @@
 
     <!-- Layout config Js -->
     <script is:inline src="/assets/js/layout.js"></script>
+
+    <!-- Sweet Alert css-->
+    <link href="/assets/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet" type="text/css" />
     <!-- Bootstrap Css -->
     <link href="/assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
     <!-- Icons Css -->
@@ -54,22 +57,7 @@
                 </div>
                 <!-- end row -->
 
-                <div class="row justify-content-center">
-                    <div class="col-md-8 col-lg-6 col-xl-5">
-                        <div class="card mt-4 card-bg-fill">
-
-                            <div class="card-body p-4">
-                                <div class="text-center mt-2">
-                                    <h5 class="text-primary">Welcome Back !</h5>
-                                    <p class="text-muted">Sign in to continue.</p>
-                                </div>
-                                <slot />
-                            </div>
-                            <!-- end card body -->
-                        </div>
-                        <!-- end card -->
-                    </div>
-                </div>
+                <slot />
                 <!-- end row -->
             </div>
             <!-- end container -->
@@ -81,10 +69,6 @@
 
     <!-- JAVASCRIPT -->
     <script is:inline src="/assets/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script is:inline src="/assets/libs/simplebar/simplebar.min.js"></script>
-    <script is:inline src="/assets/libs/node-waves/waves.min.js"></script>
-    <script is:inline src="/assets/libs/feather-icons/feather.min.js"></script>
-    <script is:inline src="/assets/js/pages/plugins/lord-icon-2.1.0.js"></script>
 
     <!-- particles js -->
     <script is:inline src="/assets/libs/particles.js/particles.js"></script>
@@ -92,5 +76,8 @@
     <script is:inline src="/assets/js/pages/particles.app.js"></script>
     <!-- password-addon init -->
     <script is:inline src="/assets/js/pages/password-addon.init.js"></script>
+    <!-- sweet alerts -->
+    <script is:inline src="/assets/libs/sweetalert2/sweetalert2.min.js"></script>
+    <script is:inline src="/assets/js/auth.js"></script>
 </body>
 </html>

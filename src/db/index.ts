@@ -6,12 +6,9 @@ import {
 import { createPool, type PoolOptions } from "mysql2/promise";
 import * as schema from "@/db/schema";
 
-const pool = createPool({
-  host: process.env.MYSQL_HOST,
-  user: process.env.MYSQL_USER,
-  password: process.env.MYSQL_PASSWORD,
-  database: process.env.MYSQL_DATABASE,
-} satisfies PoolOptions);
+if (!import.meta.env.MYSQL_URL) throw new Error("MYSQL CONNECTION STRING IS REQUIRED");
+
+const pool = createPool(import.meta.env.MYSQL_URL);
 
 export const db: MySql2Database<typeof schema> = drizzle(pool, {
   schema,
