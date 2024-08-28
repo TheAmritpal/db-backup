@@ -4,7 +4,7 @@ if (addDatabaseForm) {
     event.preventDefault();
     try {
       const formData = new FormData(event.target);
-      const res = await fetch("/api/database", {
+      const res = await fetch("/api/database/check", {
         method: "POST",
         body: formData,
         credentials: "include",

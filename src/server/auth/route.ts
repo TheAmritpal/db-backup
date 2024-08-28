@@ -1,5 +1,5 @@
 import Elysia, { t } from "elysia";
-import { Logout, SignIn } from "@/server/services/auth";
+import { Logout, SignIn } from "@/server/auth/controller";
 
 export const authRoutes = new Elysia().group("/auth", (app) =>
   app

@@ -17,9 +17,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
       });
     }
   }
-
+  console.log(context.request.method)
   const sessionId = context.cookies.get(lucia.sessionCookieName)?.value ?? null;
-  console.log(sessionId, "sessionId", context.request.method);
   if (!sessionId) {
     context.locals.user = null;
     context.locals.session = null;
