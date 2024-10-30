@@ -3,7 +3,7 @@ import {
   type MySql2Database,
   type MySql2DrizzleConfig,
 } from "drizzle-orm/mysql2";
-import { createPool, type PoolOptions } from "mysql2/promise";
+import { createPool } from "mysql2/promise";
 import * as schema from "@/db/schema";
 
 if (!import.meta.env.MYSQL_URL) throw new Error("MYSQL CONNECTION STRING IS REQUIRED");

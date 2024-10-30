@@ -8,9 +8,109 @@ import { treaty } from "@elysiajs/eden";
 import type { App } from "@/server/elysia";
 const app = treaty<App>("localhost:4321");
 const databases = await app.api.database.get();
-console.log(databases, "databases");
 ---
 
+<script>
+  import type { App } from "@/server/elysia";
+  import { treaty } from "@elysiajs/eden";
+  import Swal from "sweetalert2";
+  const app = treaty<App>("localhost:4321");
+  const backupSelect = document.querySelectorAll<HTMLInputElement>(".backup-select");
+  backupSelect.forEach((select: HTMLInputElement) => {
+    select.addEventListener("change", async (event: Event) => {
+      if (event.target) {
+        try {
+          const id = event.target.getAttribute("data-id");
+          const { data, error } = app.api.database["change-backup"].post({
+            id: +id,
+            backup: event.target.value,
+          });
+          if (error) throw error;
+          if (!data.success) {
+            Swal.fire({
+              position: "center",
+              icon: "error",
+              title: data.message[0],
+              showConfirmButton: false,
+              timer: 2000,
+              showCloseButton: true,
+            });
+          }
+        } catch (error) {
+          const customError = error as {
+            status: number;
+            value:
+              | {
+                  success: boolean;
+                  message: string[];
+                }
+              | string;
+          };
+          const errorMessage =
+            typeof customError.value === "string"
+              ? customError.value
+              : customError.value.message[0];
+          Swal.fire({
+            position: "center",
+            icon: "error",
+            title: errorMessage,
+            showConfirmButton: false,
+            timer: 2000,
+            showCloseButton: true,
+          });
+        }
+      }
+    });
+  });
+
+  const deleteDatabase = document.querySelectorAll<HTMLElement>(".remove-item-btn");
+  deleteDatabase.forEach((database: HTMLElement) => {
+    database.addEventListener("click", async function (event: Event) {
+      try {
+        if (event.target) {
+          const id = event.target.getAttribute("data-id");
+          const { data, error } = await app.api.database.delete.post({id: +id});
+          if (error) throw error;
+          if(data.success) {
+            Swal.fire({
+              position: "center",
+              icon: "success",
+              title: data.message[0],
+              showConfirmButton: false,
+              timer: 2000,
+              showCloseButton: true,
+            });
+            setTimeout(() => {
+              window.location.reload();
+            }, 2000);
+          }
+        }
+      } catch (error) {
+        const customError = error as {
+          status: number;
+          value:
+            | {
+                success: boolean;
+                message: string[];
+              }
+            | string;
+        };
+        const errorMessage =
+          typeof customError.value === "string"
+            ? customError.value
+            : customError.value.message[0];
+        Swal.fire({
+          position: "center",
+          icon: "error",
+          title: errorMessage,
+          showConfirmButton: false,
+          timer: 2000,
+          showCloseButton: true,
+        });
+      }
+    });
+  });
+</script>
 <AdminLayout>
   <div class="container-fluid">
     <!-- start page title -->
@@ -56,6 +156,7 @@ console.log(databases, "databases");
                   <th data-ordering="false">Database</th>
                   <th data-ordering="false">Host</th>
                   <th data-ordering="false">User</th>
+                  <th data-ordering="false">Backup</th>
                   <th>Action</th>
                 </tr>
               </thead>
@@ -63,10 +164,20 @@ console.log(databases, "databases");
                 {
                   databases.data.map((database, index) => (
                     <tr>
-                      <td>{index+1}</td>
+                      <td>{index + 1}</td>
                       <td>{database.database}</td>
                       <td>{database.host}</td>
                       <td>{database.user}</td>
+                      <td>
+                        <select class="form-control backup-select" data-id={database.id}>
+                          <option value="daily" selected={database.backup === "daily"}>
+                            Daily
+                          </option>
+                          <option value="weekly" selected={database.backup === "weekly"}>
+                            Weekly
+                          </option>
+                        </select>
+                      </td>
                       <td>
                         <div class="dropdown d-inline-block">
                           <button
@@ -79,19 +190,19 @@ console.log(databases, "databases");
                           </button>
                           <ul class="dropdown-menu dropdown-menu-end">
                             <li>
-                              <a href="#!" class="dropdown-item">
-                                <i class="ri-eye-fill align-bottom me-2 text-muted" />{" "}
-                                View
+                              <a
+                                href={`/database/downloamd/${database.id}`}
+                                class="dropdown-item"
+                              >
+                                <i class="ri-download-fill align-bottom me-2 text-muted" />{" "}
+                                Download
                               </a>
                             </li>
                             <li>
-                              <a class="dropdown-item edit-item-btn">
-                                <i class="ri-pencil-fill align-bottom me-2 text-muted" />{" "}
-                                Edit
-                              </a>
-                            </li>
-                            <li>
-                              <a class="dropdown-item remove-item-btn">
+                              <a
+                                class="dropdown-item remove-item-btn"
+                                data-id={database.id}
+                              >
                                 <i class="ri-delete-bin-fill align-bottom me-2 text-muted" />{" "}
                                 Delete
                               </a>

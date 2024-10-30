@@ -1,4 +1,5 @@
-import { datetime, int, mysqlTable, varchar } from "drizzle-orm/mysql-core";
+import { datetime, int, mysqlEnum, mysqlTable, varchar } from "drizzle-orm/mysql-core";
+import { EBackup } from "@/db/utils/EBackup.enum";
 
 export const database = mysqlTable("databases", {
   id: int("id").autoincrement().primaryKey(),
@@ -6,6 +7,7 @@ export const database = mysqlTable("databases", {
   user: varchar("user", { length: 255 }).notNull(),
   password: varchar("password", { length: 255 }).notNull(),
   database: varchar("database", { length: 255 }).notNull(),
+  backup: mysqlEnum("backup", [EBackup.DAILY, EBackup.WEEKLY]).default(EBackup.DAILY),
   createdAt: datetime("created_at", { mode: "date" }).default(new Date()).notNull(),
   updatedAt: datetime("updated_at", { mode: "date" }).default(new Date()).notNull(),
 });

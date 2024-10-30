@@ -16,6 +16,62 @@ export const databaseRoutes = new Elysia().group("/database", (app) =>
     })
     .use(authGuard)
     .post(
+      "/delete",
+      async ({ body, db, error }) => {
+        const checkDatabase = await db.drizzle
+          .select()
+          .from(schema.database)
+          .where(eq(schema.database.id, body.id));
+        if (!checkDatabase.length)
+          return error(400, {
+            success: false,
+            message: ["Database Not Found"],
+          });
+        await db.drizzle.delete(schema.database).where(eq(schema.database.id, body.id));
+        return { success: true, message: ["Database Deleted"] };
+      },
+      {
+        body: t.Object({
+          id: t.Number({ error: "Id is required" }),
+        }),
+      }
+    )
+    .post(
+      "/change-backup",
+      async ({ body, db, error }) => {
+        try {
+          console.log(body, "body");
+          if (!body.id) {
+            return error(400, {
+              success: false,
+              message: ["Id is required"],
+            });
+          }
+          const checkDatabase = await db.drizzle
+            .select()
+            .from(schema.database)
+            .where(eq(schema.database.id, body.id));
+          if (!checkDatabase.length)
+            return error(400, {
+              success: false,
+              message: ["Database not found"],
+            });
+          await db.drizzle
+            .update(schema.database)
+            .set({ backup: body.backup })
+            .where(eq(schema.database.id, body.id));
+          return { success: true, message: ["Backup Updated"] };
+        } catch (err) {
+          return error(500, {
+            message: err,
+          });
+        }
+      },
+      {
+        body: t.Omit(_checkDatabase, ["host", "user", "password", "database"]),
+      }
+    )
+    .post(
       "/check",
       async ({ body, db, error }) => {
         try {
@@ -51,7 +107,7 @@ export const databaseRoutes = new Elysia().group("/database", (app) =>
         }
       },
       {
-        body: t.Omit(_checkDatabase, ["id", "database"]),
+        body: t.Omit(_checkDatabase, ["id", "database", "backup"]),
       }
     )
     .post(
@@ -79,7 +135,7 @@ export const databaseRoutes = new Elysia().group("/database", (app) =>
         }
       },
       {
-        body: t.Omit(_checkDatabase, ["id"]),
+        body: t.Omit(_checkDatabase, ["id", "backup"]),
       }
     )
 );
