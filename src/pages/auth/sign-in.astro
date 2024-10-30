@@ -2,48 +2,127 @@
 import AuthLayout from "@/layouts/AuthLayout.astro";
 ---
 
+<script>
+  import { treaty } from "@elysiajs/eden";
+  import type { App } from "@/server/elysia";
+  import Swal from "sweetalert2";
+
+  const app = treaty<App>("localhost:4321");
+  const loginForm = document.querySelector("#loginForm");
+  const email = document.querySelector<HTMLInputElement>("#email");
+  const password = document.querySelector<HTMLInputElement>("#password");
+  if (loginForm) {
+    loginForm.addEventListener("submit", async (event: Event) => {
+      event.preventDefault();
+      try {
+        if (!email || !password) {
+          return Swal.fire({
+            title: "Invalid form",
+            text: "Please enter valid credentials",
+            icon: "error",
+          });
+        }
+        const { data, error } = await app.api.auth["sign-in"].post({
+          email: email.value,
+          password: password.value,
+        });
+        if (error) throw error;
+        Swal.fire({
+          title: "Logged in",
+          text: data.message[0],
+          icon: data.success ? "success" : "error",
+        }).then(() => {
+          window.location.href = "/";
+        });
+      } catch (error) {
+        const customError = error as {
+          status: number;
+          value:
+            | {
+                success: boolean;
+                message: string[];
+              }
+            | string;
+        };
+        const errorMessage = typeof customError.value === 'string' 
+    ? customError.value 
+    : customError.value.message[0];
+        Swal.fire({
+          position: "center",
+          icon: "error",
+          title: errorMessage,
+          showConfirmButton: false,
+          timer: 2000,
+          showCloseButton: true,
+        });
+    }
+    });
+  }
+</script>
 <AuthLayout>
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6 col-xl-5">
-            <div class="card mt-4 card-bg-fill">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6 col-xl-5">
+      <div class="card mt-4 card-bg-fill">
+        <div class="card-body p-4">
+          <div class="text-center mt-2">
+            <h5 class="text-primary">Welcome Back !</h5>
+            <p class="text-muted">Sign in to continue.</p>
+          </div>
+          <div class="p-2 mt-4">
+            <form id="loginForm">
+              <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input
+                  type="text"
+                  name="email"
+                  class="form-control"
+                  id="email"
+                  placeholder="Enter email"
+                />
+              </div>
 
-                <div class="card-body p-4">
-                    <div class="text-center mt-2">
-                        <h5 class="text-primary">Welcome Back !</h5>
-                        <p class="text-muted">Sign in to continue.</p>
-                    </div>
-                    <div class="p-2 mt-4">
-                        <form id="loginForm">
-                            <div class="mb-3">
-                                <label for="email" class="form-label">Email</label>
-                                <input type="text" name="email" class="form-control" id="email" placeholder="Enter email">
-                            </div>
-
-                            <div class="mb-3">
-                                <div class="float-end">
-                                    <a href="/auth/forgot-password" class="text-muted">Forgot password?</a>
-                                </div>
-                                <label class="form-label" for="password-input">Password</label>
-                                <div class="position-relative auth-pass-inputgroup mb-3">
-                                    <input type="password" name="password" class="form-control pe-5 password-input" placeholder="Enter password" id="password-input">
-                                    <button class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon material-shadow-none" type="button" id="password-addon"><i class="ri-eye-fill align-middle"></i></button>
-                                </div>
-                            </div>
-
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="" id="auth-remember-check">
-                                <label class="form-check-label" for="auth-remember-check">Remember me</label>
-                            </div>
-
-                            <div class="mt-4">
-                                <button class="btn btn-success w-100" type="submit">Sign In</button>
-                            </div>
-                        </form>
-                    </div>
+              <div class="mb-3">
+                <div class="float-end">
+                  <a href="/auth/forgot-password" class="text-muted">Forgot password?</a>
                 </div>
-            <!-- end card body -->
+                <label class="form-label" for="password">Password</label>
+                <div class="position-relative auth-pass-inputgroup mb-3">
+                  <input
+                    type="password"
+                    name="password"
+                    class="form-control pe-5 password-input"
+                    placeholder="Enter password"
+                    id="password"
+                  />
+                  <button
+                    class="btn btn-link position-absolute end-0 top-0 text-decoration-none text-muted password-addon material-shadow-none"
+                    type="button"
+                    id="password-addon"><i class="ri-eye-fill align-middle"></i></button
+                  >
+                </div>
+              </div>
+
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  value=""
+                  id="auth-remember-check"
+                />
+                <label class="form-check-label" for="auth-remember-check"
+                  >Remember me</label
+                >
+              </div>
+
+              <div class="mt-4">
+                <button class="btn btn-success w-100" type="submit">Sign In</button>
+              </div>
+            </form>
+          </div>
         </div>
-        <!-- end card -->
+        <!-- end card body -->
+      </div>
+      <!-- end card -->
     </div>
-</div>
+  </div>
 </AuthLayout>

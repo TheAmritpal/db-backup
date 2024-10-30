@@ -9,8 +9,16 @@ import * as schema from "@/db/schema";
 if (!import.meta.env.MYSQL_URL) throw new Error("MYSQL CONNECTION STRING IS REQUIRED");
 
 const pool = createPool(import.meta.env.MYSQL_URL);
+export class DatabaseConfig {
+  db: MySql2Database<typeof schema>;
+  constructor() {
+    this.db = drizzle(pool, {
+      schema,
+      mode: "default",
+    } as MySql2DrizzleConfig<typeof schema>);
+  }
 
-export const db: MySql2Database<typeof schema> = drizzle(pool, {
-  schema,
-  mode: "default",
-} as MySql2DrizzleConfig<typeof schema>);
+  get drizzle(): MySql2Database<typeof schema> {
+    return this.db;
+  }
+}

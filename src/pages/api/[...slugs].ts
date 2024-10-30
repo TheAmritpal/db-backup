@@ -1,4 +1,4 @@
-import { app } from "@/server/eylsia";
+import { app } from "@/server/elysia.ts";
 import type { APIContext } from "astro";
 
 export const ALL = handle;

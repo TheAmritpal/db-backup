@@ -3,9 +3,9 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "dev": "astro dev",
-    "start": "astro dev",
-    "build": "astro check && astro build",
+    "dev": "bunx --bun astro dev",
+    "start": "bunx --bun astro dev",
+    "build": "astro check && bunx --bun astro build",
     "preview": "bun run ./dist/server/entry.mjs",
     "astro": "astro",
     "db:studio": "drizzle-kit studio",
@@ -13,22 +13,25 @@
     "db:migrate": "bun run --bun ./src/db/migrate.ts"
   },
   "dependencies": {
-    "@astrojs/check": "^0.9.3",
+    "@astrojs/check": "0.9.4",
     "@elysiajs/eden": "^1.1.2",
     "@lucia-auth/adapter-drizzle": "^1.1.0",
-    "astro": "^4.14.3",
-    "astro-bun-adapter": "^1.0.2",
-    "bcrypt": "^5.1.1",
+    "@nurodev/astro-bun": "^1.1.5",
+    "astro": "4.16.7",
     "drizzle-orm": "^0.33.0",
+    "drizzle-typebox": "^0.1.1",
     "elysia": "^1.1.7",
     "lucia": "^3.2.0",
     "mysql2": "^3.11.0",
-    "typescript": "^5.5.4",
-    "zod": "^3.23.8"
+    "sweetalert2": "^11.14.4",
+    "typescript": "^5.5.4"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
     "@types/bun": "^1.1.6",
     "drizzle-kit": "^0.24.0"
+  },
+  "override": {
+    "@sinclair/typebox": "0.32.4"
   }
 }

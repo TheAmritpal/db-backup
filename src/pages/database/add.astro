@@ -1,80 +1,198 @@
 ---
+const user = Astro.locals.user;
+if (!user) {
+  return Astro.redirect("/auth/sign-in");
+}
 import AdminLayout from "@/layouts/AdminLayout.astro";
 ---
 
+<script>
+  import { treaty } from "@elysiajs/eden";
+  import type { App } from "@/server/elysia";
+  import Swal from "sweetalert2";
+  const app = treaty<App>("localhost:4321");
+  const addDatabaseForm = document.querySelector<HTMLElement>("#addDatabaseForm");
+  const host = document.querySelector<HTMLInputElement>("#host");
+  const user = document.querySelector<HTMLInputElement>("#user");
+  const pass = document.querySelector<HTMLInputElement>("#pass");
+  const db = document.querySelector<HTMLInputElement>("#database");
+  const database = document.querySelector<HTMLElement>(".database-select");
+  const submitBtn = document.querySelector<HTMLElement>(".submitBtn");
+  if (addDatabaseForm) {
+    addDatabaseForm.addEventListener("submit", async (event: Event) => {
+      event.preventDefault();
+      try {
+        if (!user || !host || !pass) {
+          return Swal.fire({
+            title: "Invalid form",
+            text: "Please enter valid credentials",
+            icon: "error",
+          });
+        }
+        const postData: any = {
+          host: host.value,
+          password: pass.value,
+          user: user.value,
+        };
+        let data, error;
+        if (db && db.value !== "") {
+          postData["database"] = db.value;
+          const res = await app.api.database.create.post(postData);
+          data = res.data;
+          error = res.error;
+        } else {
+          const res = await app.api.database.check.post(postData);
+          data = res.data;
+          error = res.error;
+        }
+        if (data) {
+          if (database) {
+            database.classList.remove("d-none");
+            const select = database.querySelector<HTMLSelectElement>("select");
+            if (select) {
+              select.innerHTML = "";
+              for (const element of data) {
+                const newOption = document.createElement("option");
+                newOption.innerHTML = element.SCHEMA_NAME;
+                select.append(newOption);
+              }
+            }
+            if (submitBtn) {
+              if (!database.classList.contains("d-none")) {
+                host.setAttribute("readonly", "true");
+                user.setAttribute("readonly", "true");
+                pass.setAttribute("readonly", "true");
+                submitBtn.innerHTML = "Add Database";
+              } else {
+                host.removeAttribute("readonly");
+                user.removeAttribute("readonly");
+                pass.removeAttribute("readonly");
+                submitBtn.innerHTML = "Fetch Database";
+              }
+            }
+          }
+        } else if (data.success) window.location.href = "/database";
+        if (error) throw error;
+      } catch (error) {
+        const customError = error as {
+          status: number;
+          value:
+            | {
+                success: boolean;
+                message: string[];
+              }
+            | string;
+        };
+        const errorMessage =
+          typeof customError.value === "string"
+            ? customError.value
+            : customError.value.message[0];
+        Swal.fire({
+          position: "center",
+          icon: "error",
+          title: errorMessage,
+          showConfirmButton: false,
+          timer: 2000,
+          showCloseButton: true,
+        });
+      }
+    });
+  }
+</script>
 <AdminLayout>
-    <div class="container-fluid">
+  <div class="container-fluid">
+    <!-- start page title -->
+    <div class="row">
+      <div class="col-12">
+        <div
+          class="page-title-box d-sm-flex align-items-center justify-content-between bg-galaxy-transparent"
+        >
+          <h4 class="mb-sm-0">Database</h4>
 
-        <!-- start page title -->
-        <div class="row">
-            <div class="col-12">
-                <div class="page-title-box d-sm-flex align-items-center justify-content-between bg-galaxy-transparent">
-                    <h4 class="mb-sm-0">Database</h4>
-
-                    <div class="page-title-right">
-                        <ol class="breadcrumb m-0">
-                            <li class="breadcrumb-item"><a href="/database">Database</a></li>
-                            <li class="breadcrumb-item active">add</li>
-                        </ol>
-                    </div>
-
-                </div>
-            </div>
+          <div class="page-title-right">
+            <ol class="breadcrumb m-0">
+              <li class="breadcrumb-item"><a href="/database">Database</a></li>
+              <li class="breadcrumb-item active">Add</li>
+            </ol>
+          </div>
         </div>
-        <!-- end page title -->
+      </div>
+    </div>
+    <!-- end page title -->
 
-        <div class="row">
-            <div class="col-lg-12">
-                <div class="card">
-                    <div class="card-header align-items-center d-flex">
-                        <h4 class="card-title mb-0 flex-grow-1">Add Database</h4>
-                    </div><!-- end card header -->
+    <div class="row">
+      <div class="col-lg-12">
+        <div class="card">
+          <div class="card-header align-items-center d-flex">
+            <h4 class="card-title mb-0 flex-grow-1">Add Database</h4>
+          </div><!-- end card header -->
 
-                    <div class="card-body">
-                        <div class="live-preview">
-                            <form class="row g-3 needs-validation" id="addDatabaseForm" novalidate autocomplete="off">
-                                <div class="col-md-4">
-                                    <label for="validationCustom01" class="form-label">Host</label>
-                                    <input type="text" class="form-control" id="validationCustom01" name="host" autocomplete="off" placeholder="93.12.23.xx" required>
-                                    <div class="valid-feedback">
-                                        Looks good!
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="user" class="form-label">User</label>
-                                    <input type="text" class="form-control" id="user" name="user" autocomplete="off" placeholder="user" required>
-                                    <div class="valid-feedback">
-                                        Looks good!
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="pass" class="form-label">Password</label>
-                                    <input type="password" class="form-control" id="pass" name="password" autocomplete="off" placeholder="**********" required>
-                                    <div class="valid-feedback">
-                                        Looks good!
-                                    </div>
-                                </div>
-                                <div class="col-md-4 d-none ">
-                                    <label for="validationCustom04" class="form-label">Database</label>
-                                    <select class="form-select" id="validationCustom04" required>
-                                        <option selected disabled value="">Choose Database...</option>
-                                        <option>...</option>
-                                    </select>
-                                    <div class="invalid-feedback">
-                                        Please select a valid state.
-                                    </div>
-                                </div>
-                                <div class="col-12">
-                                    <button class="btn btn-primary" type="submit">Fetch Database</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
+          <div class="card-body">
+            <div class="live-preview">
+              <form
+                class="row g-3 needs-validation"
+                id="addDatabaseForm"
+                novalidate
+                autocomplete="off"
+              >
+                <div class="col-md-4">
+                  <label for="host" class="form-label">Host</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="host"
+                    name="host"
+                    autocomplete="off"
+                    placeholder="93.12.23.xx"
+                    required
+                  />
+                  <div class="valid-feedback">Looks good!</div>
                 </div>
+                <div class="col-md-4">
+                  <label for="user" class="form-label">User</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="user"
+                    name="user"
+                    autocomplete="off"
+                    placeholder="user"
+                    required
+                  />
+                  <div class="valid-feedback">Looks good!</div>
+                </div>
+                <div class="col-md-4">
+                  <label for="pass" class="form-label">Password</label>
+                  <input
+                    type="password"
+                    class="form-control"
+                    id="pass"
+                    name="password"
+                    autocomplete="off"
+                    placeholder="**********"
+                    required
+                  />
+                  <div class="valid-feedback">Looks good!</div>
+                </div>
+                <div class="database-select col-md-4 d-none">
+                  <label for="database" class="form-label">Database</label>
+                  <select class="form-select" id="database" required>
+                    <option selected disabled value="">Choose Database...</option>
+                  </select>
+                  <div class="invalid-feedback">Please select a valid Database.</div>
+                </div>
+                <div class="col-12">
+                  <button class="btn btn-primary submitBtn" type="submit"
+                    >Fetch Database</button
+                  >
+                </div>
+              </form>
             </div>
-            <!-- end col -->
-
+          </div>
         </div>
-
-    </div> <!-- container-fluid -->
+      </div>
+      <!-- end col -->
+    </div>
+  </div>
+  <!-- container-fluid -->
 </AdminLayout>
