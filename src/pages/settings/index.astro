@@ -8,11 +8,24 @@ import {
   GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET,
   GOOGLE_REDIRECT_URI,
+  GOOGLE_ACCESS_TOKEN,
 } from "@/server/settings/setting.constant";
 import { treaty } from "@elysiajs/eden";
 import type { App } from "@/server/elysia";
 const app = treaty<App>("localhost:4321");
 const { data } = await app.api.setting.index.get();
+let googleConnectUrl = "";
+const clientId =
+  data?.filter((setting) => setting.name === GOOGLE_CLIENT_ID)?.[0]?.value || "";
+const clientSecret =
+  data?.filter((setting) => setting.name === GOOGLE_CLIENT_SECRET)?.[0]?.value || "";
+const redirectUri =
+  data?.filter((setting) => setting.name === GOOGLE_REDIRECT_URI)?.[0]?.value || "";
+const accessToken =
+  data?.filter((setting) => setting.name === GOOGLE_ACCESS_TOKEN)?.[0]?.value || "";
+const showButton = clientId && clientSecret && redirectUri;
+if (showButton)
+  googleConnectUrl = `https://accounts.google.com/o/oauth2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=https://www.googleapis.com/auth/drive&access_type=offline`;
 ---
 
 <script>
@@ -40,6 +53,10 @@ const { data } = await app.api.setting.index.get();
     settingsForm.addEventListener("submit", async (event: Event) => {
       event.preventDefault();
       try {
+        if (submitBtn) {
+          submitBtn.innerHTML === "Please wait...";
+          submitBtn.setAttribute("disabled", "true");
+        }
         if (!google_client_id || !google_client_secret || !google_redirect_uri) {
           return Swal.fire({
             title: "Invalid form",
@@ -79,6 +96,9 @@ const { data } = await app.api.setting.index.get();
             icon: "error",
           });
         }
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
       } catch (error) {
         const customError = error as {
           status: number;
@@ -101,11 +121,22 @@ const { data } = await app.api.setting.index.get();
           timer: 2000,
           showCloseButton: true,
         });
+      } finally {
+        if (submitBtn) {
+          submitBtn.innerHTML === "Update";
+          submitBtn.removeAttribute("disabled");
+        }
       }
     });
   }
 </script>
 <AdminLayout>
+  <style>
+    a.disabled {
+      pointer-events: none;
+      cursor: default;
+    }
+  </style>
   <div class="container-fluid">
     <!-- start page title -->
     <div class="row">
@@ -150,9 +181,7 @@ const { data } = await app.api.setting.index.get();
                     id={GOOGLE_CLIENT_ID}
                     name={GOOGLE_CLIENT_ID}
                     autocomplete="off"
-                    value={data?.filter(
-                      (element) => element.name === GOOGLE_CLIENT_ID
-                    )?.[0]?.value || ""}
+                    value={clientId}
                     required
                   />
                   <div class="valid-feedback">Looks good!</div>
@@ -167,9 +196,7 @@ const { data } = await app.api.setting.index.get();
                     id={GOOGLE_CLIENT_SECRET}
                     name={GOOGLE_CLIENT_SECRET}
                     autocomplete="off"
-                    value={data?.filter(
-                      (element) => element.name === GOOGLE_CLIENT_SECRET
-                    )?.[0]?.value || ""}
+                    value={clientSecret}
                     required
                   />
                   <div class="valid-feedback">Looks good!</div>
@@ -182,15 +209,24 @@ const { data } = await app.api.setting.index.get();
                     id={GOOGLE_REDIRECT_URI}
                     name={GOOGLE_REDIRECT_URI}
                     autocomplete="off"
-                    value={data?.filter(
-                      (element) => element.name === GOOGLE_REDIRECT_URI
-                    )?.[0]?.value || ""}
+                    value={redirectUri}
                     required
                   />
                   <div class="valid-feedback">Looks good!</div>
                 </div>
                 <div class="col-12">
                   <button class="btn btn-primary submitBtn" type="submit">Update</button>
+                  {
+                    showButton && (
+                      <a
+                        target="_blank"
+                        href={googleConnectUrl}
+                        class={`btn btn-warning ${accessToken ? "disabled" : ""}`}
+                      >
+                        Connect To Drive
+                      </a>
+                    )
+                  }
                 </div>
               </form>
             </div>
