@@ -1,6 +1,7 @@
 import { Elysia } from "elysia";
 import { authRoutes } from "@/server/auth";
 import { databaseRoutes } from "@/server/database";
+import { settingRoutes } from "@/server/settings";
 
 export const app = new Elysia({ prefix: "/api" })
   .onError(({ error, code }) => {
@@ -21,6 +22,7 @@ export const app = new Elysia({ prefix: "/api" })
     }
   })
   .use(authRoutes)
-  .use(databaseRoutes);
+  .use(databaseRoutes)
+  .use(settingRoutes);
 
 export type App = typeof app;
