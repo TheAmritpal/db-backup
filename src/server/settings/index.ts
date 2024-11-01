@@ -57,34 +57,13 @@ export const settingRoutes = new Elysia().group("/setting", (app) => {
             GOOGLE_CLIENT_ID,
             GOOGLE_CLIENT_SECRET,
             GOOGLE_REDIRECT_URI,
+            GOOGLE_ACCESS_TOKEN,
           ])
         );
       return settings;
     })
-    .get(
-      "/code",
-      async ({ query, db, redirect }) => {
-        if(!query?.code) return redirect("http://localhost:4321/settings");
-        const checkToken = await db.drizzle
-          .select()
-          .from(schema.setting)
-          .where(eq(schema.setting.name, GOOGLE_ACCESS_TOKEN));
-        if (checkToken.length)
-          await db.drizzle
-            .update(schema.setting)
-            .set({ value: query.code })
-            .where(eq(schema.setting.name, GOOGLE_ACCESS_TOKEN));
-        else
-          await db.drizzle.insert(schema.setting).values({
-            name: GOOGLE_ACCESS_TOKEN,
-            value: query.code,
-            description: GOOGLE_ACCESS_TOKEN,
-          });
-
-        return redirect("http://localhost:4321/settings");
-      }
-    )
-    .get("/check", async ({ db }) => {
+    .get("/code", async ({ query, db, redirect }) => {
+      if (!query?.code) return redirect("http://localhost:4321/settings");
       const settings = await db.drizzle
         .select()
         .from(schema.setting)
@@ -93,14 +72,28 @@ export const settingRoutes = new Elysia().group("/setting", (app) => {
             GOOGLE_CLIENT_ID,
             GOOGLE_CLIENT_SECRET,
             GOOGLE_REDIRECT_URI,
-            GOOGLE_REFRESH_TOKEN,
           ])
         );
+      const checkToken = await db.drizzle
+        .select()
+        .from(schema.setting)
+        .where(eq(schema.setting.name, GOOGLE_ACCESS_TOKEN));
+      if (checkToken.length)
+        await db.drizzle
+          .update(schema.setting)
+          .set({ value: query.code })
+          .where(eq(schema.setting.name, GOOGLE_ACCESS_TOKEN));
+      else
+        await db.drizzle.insert(schema.setting).values({
+          name: GOOGLE_ACCESS_TOKEN,
+          value: query.code,
+          description: GOOGLE_ACCESS_TOKEN,
+        });
 
       let google_client_id: string = "";
       let google_client_secret: string = "";
       let google_redirect_uri: string = "";
-      let google_access_token: string = "";
+      let google_access_token: string = query.code;
       for await (const setting of settings) {
         if (setting.name === GOOGLE_CLIENT_ID && setting.value)
           google_client_id = setting.value;
@@ -108,23 +101,79 @@ export const settingRoutes = new Elysia().group("/setting", (app) => {
           google_client_secret = setting.value;
         if (setting.name === GOOGLE_REDIRECT_URI && setting.value)
           google_redirect_uri = setting.value;
-        if (setting.name === GOOGLE_ACCESS_TOKEN && setting.value)
-          google_access_token = setting.value;
       }
-      if (
-        !google_client_id ||
-        !google_client_secret ||
-        !google_redirect_uri ||
-        !google_access_token
-      )
-        return;
+      if (!google_client_id || !google_client_secret || !google_redirect_uri) return;
       const googleOAuth = new GoogleOAuth(
         google_client_id,
         google_client_secret,
-        google_redirect_uri,
-        google_access_token
+        google_redirect_uri
       );
-      await googleOAuth.uploadDatabase();
+
+      const tokens = await googleOAuth.init(google_access_token);
+
+      const checkRefreshToken = await db.drizzle
+        .select()
+        .from(schema.setting)
+        .where(eq(schema.setting.name, GOOGLE_REFRESH_TOKEN));
+      if (checkRefreshToken.length)
+        await db.drizzle
+          .update(schema.setting)
+          .set({ value: tokens.refresh_token })
+          .where(eq(schema.setting.name, GOOGLE_REFRESH_TOKEN));
+      else
+        await db.drizzle.insert(schema.setting).values({
+          name: GOOGLE_REFRESH_TOKEN,
+          value: tokens.refresh_token,
+          description: "Google Refresh Token",
+        });
+
+      return redirect("http://localhost:4321/settings");
+    })
+    .get("/check", async ({ db }) => {
+      try {
+        const settings = await db.drizzle
+          .select()
+          .from(schema.setting)
+          .where(
+            inArray(schema.setting.name, [
+              GOOGLE_CLIENT_ID,
+              GOOGLE_CLIENT_SECRET,
+              GOOGLE_REDIRECT_URI,
+              GOOGLE_REFRESH_TOKEN,
+            ])
+          );
+        let google_client_id: string = "";
+        let google_client_secret: string = "";
+        let google_redirect_uri: string = "";
+        let google_refresh_token: string = "";
+        for await (const setting of settings) {
+          if (setting.name === GOOGLE_CLIENT_ID && setting.value)
+            google_client_id = setting.value;
+          if (setting.name === GOOGLE_CLIENT_SECRET && setting.value)
+            google_client_secret = setting.value;
+          if (setting.name === GOOGLE_REDIRECT_URI && setting.value)
+            google_redirect_uri = setting.value;
+          if (setting.name === GOOGLE_REFRESH_TOKEN && setting.value)
+            google_refresh_token = setting.value;
+        }
+        if (
+          !google_client_id ||
+          !google_client_secret ||
+          !google_redirect_uri ||
+          !google_refresh_token
+        )
+          return;
+        const googleOAuth = new GoogleOAuth(
+          google_client_id,
+          google_client_secret,
+          google_redirect_uri,
+          google_refresh_token
+        );
+        await googleOAuth.uploadDatabase();
+        return { success: true };
+      } catch (error) {
+        return { success: false, message: [error] };
+      }
     })
     .use(authGuard)
     .post(
@@ -158,5 +207,12 @@ export const settingRoutes = new Elysia().group("/setting", (app) => {
           })
         ),
       }
-    );
+    )
+    .post("/remove-access", async ({ db }) => {
+      await db.drizzle
+        .update(schema.setting)
+        .set({ value: "" })
+        .where(eq(schema.setting.name, GOOGLE_ACCESS_TOKEN));
+      return { success: true, message: ["Access Removed"] };
+    });
 });

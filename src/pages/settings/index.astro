@@ -23,9 +23,10 @@ const redirectUri =
   data?.filter((setting) => setting.name === GOOGLE_REDIRECT_URI)?.[0]?.value || "";
 const accessToken =
   data?.filter((setting) => setting.name === GOOGLE_ACCESS_TOKEN)?.[0]?.value || "";
+console.log(accessToken, "accessToken");
 const showButton = clientId && clientSecret && redirectUri;
 if (showButton)
-  googleConnectUrl = `https://accounts.google.com/o/oauth2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=https://www.googleapis.com/auth/drive&access_type=offline`;
+  googleConnectUrl = `https://accounts.google.com/o/oauth2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=https://www.googleapis.com/auth/drive&access_type=offline&prompt=consent`;
 ---
 
 <script>
@@ -129,6 +130,53 @@ if (showButton)
       }
     });
   }
+  const removeDriveAccess =
+    document.querySelector<HTMLInputElement>(".removeDriveAccess");
+  if (removeDriveAccess)
+    removeDriveAccess.addEventListener("click", async function () {
+      try {
+        const { data, error } = await app.api.setting["remove-access"].post();
+        if (error) throw error;
+        if (data.success) {
+          Swal.fire({
+            title: "Success",
+            text: data.message[0],
+            icon: "success",
+          });
+        } else {
+          Swal.fire({
+            title: "error",
+            text: data.message[0],
+            icon: "error",
+          });
+        }
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      } catch (error) {
+        const customError = error as {
+          status: number;
+          value:
+            | {
+                success: boolean;
+                message: string[];
+              }
+            | string;
+        };
+        const errorMessage =
+          typeof customError.value === "string"
+            ? customError.value
+            : customError.value.message[0];
+        Swal.fire({
+          position: "center",
+          icon: "error",
+          title: errorMessage,
+          showConfirmButton: false,
+          timer: 2000,
+          showCloseButton: true,
+        });
+      }
+    });
 </script>
 <AdminLayout>
   <style>
@@ -223,8 +271,15 @@ if (showButton)
                         href={googleConnectUrl}
                         class={`btn btn-warning ${accessToken ? "disabled" : ""}`}
                       >
-                        Connect To Drive
+                        {accessToken ? "Connected to Google Drive" : "Connect To Drive"}
                       </a>
+                    )
+                  }
+                  {
+                    accessToken && (
+                      <button class="btn btn-danger removeDriveAccess">
+                        Remove Drive Access
+                      </button>
                     )
                   }
                 </div>
