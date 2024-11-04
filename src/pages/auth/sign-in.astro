@@ -7,7 +7,7 @@ import AuthLayout from "@/layouts/AuthLayout.astro";
   import type { App } from "@/server/elysia";
   import Swal from "sweetalert2";
 
-  const app = treaty<App>("localhost:4321");
+  const app = treaty<App>(window.location.host);
   const loginForm = document.querySelector("#loginForm");
   const email = document.querySelector<HTMLInputElement>("#email");
   const password = document.querySelector<HTMLInputElement>("#password");

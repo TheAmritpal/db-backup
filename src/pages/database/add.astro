@@ -10,7 +10,7 @@ import AdminLayout from "@/layouts/AdminLayout.astro";
   import { treaty } from "@elysiajs/eden";
   import type { App } from "@/server/elysia";
   import Swal from "sweetalert2";
-  const app = treaty<App>("localhost:4321");
+  const app = treaty<App>(window.location.host);
   const addDatabaseForm = document.querySelector<HTMLElement>("#addDatabaseForm");
   const host = document.querySelector<HTMLInputElement>("#host");
   const user = document.querySelector<HTMLInputElement>("#user");

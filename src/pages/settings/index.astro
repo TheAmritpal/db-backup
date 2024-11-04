@@ -23,7 +23,6 @@ const redirectUri =
   data?.filter((setting) => setting.name === GOOGLE_REDIRECT_URI)?.[0]?.value || "";
 const accessToken =
   data?.filter((setting) => setting.name === GOOGLE_ACCESS_TOKEN)?.[0]?.value || "";
-console.log(accessToken, "accessToken");
 const showButton = clientId && clientSecret && redirectUri;
 if (showButton)
   googleConnectUrl = `https://accounts.google.com/o/oauth2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=https://www.googleapis.com/auth/drive&access_type=offline&prompt=consent`;
@@ -38,7 +37,7 @@ if (showButton)
     GOOGLE_CLIENT_SECRET,
     GOOGLE_REDIRECT_URI,
   } from "@/server/settings/setting.constant";
-  const app = treaty<App>("localhost:4321");
+  const app = treaty<App>(window.location.host);
   const settingsForm = document.querySelector<HTMLElement>("#settingsForm");
   const google_client_id = document.querySelector<HTMLInputElement>(
     `#${GOOGLE_CLIENT_ID}`
