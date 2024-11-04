@@ -1,9 +1,10 @@
-import { db } from "@/db";
+import { DatabaseConfig } from "@/db";
 import { migrate } from "drizzle-orm/mysql2/migrator";
 
 const main = async () => {
   try {
-    await migrate(db, {
+    const db = new DatabaseConfig();
+    await migrate(db.drizzle, {
       migrationsFolder: "src/db/migrations",
     });
 

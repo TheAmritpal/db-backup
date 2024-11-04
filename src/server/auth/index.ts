@@ -40,7 +40,7 @@ export const authRoutes = new Elysia().group("/auth", (app) =>
         }),
       }
     )
-    .get("/logout", async ({ cookie, cookie: { auth_session }, redirect }) => {
+    .get("/logout", async ({ cookie: { auth_session }, redirect }) => {
       if (!auth_session?.value) {
         return redirect("http://localhost:4321/auth/sign-in");
       }

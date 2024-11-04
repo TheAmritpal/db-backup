@@ -3,15 +3,17 @@ const user = Astro.locals.user;
 if (!user) {
   return Astro.redirect("/auth/sign-in");
 }
+import { EBackup } from "@/db/utils/EBackup.enum";
 import AdminLayout from "@/layouts/AdminLayout.astro";
 import { treaty } from "@elysiajs/eden";
 import type { App } from "@/server/elysia";
 const app = treaty<App>("localhost:4321");
-const databases = await app.api.database.get();
+const databases = await app.api.database.index.get();
 ---
 
 <script>
   import type { App } from "@/server/elysia";
+  import { EBackup } from "@/db/utils/EBackup.enum";
   import { treaty } from "@elysiajs/eden";
   import Swal from "sweetalert2";
   const app = treaty<App>("localhost:4321");
@@ -20,10 +22,12 @@ const databases = await app.api.database.get();
     select.addEventListener("change", async (event: Event) => {
       if (event.target) {
         try {
-          const id = event.target.getAttribute("data-id");
-          const { data, error } = app.api.database["change-backup"].post({
+          const id = (event.target as HTMLInputElement).getAttribute("data-id");
+          if (!id) return;
+          const backup: EBackup = (event.target as HTMLInputElement).value as EBackup;
+          const { data, error } = await app.api.database["change-backup"].post({
             id: +id,
-            backup: event.target.value,
+            backup
           });
           if (error) throw error;
           if (!data.success) {
@@ -68,10 +72,11 @@ const databases = await app.api.database.get();
     database.addEventListener("click", async function (event: Event) {
       try {
         if (event.target) {
-          const id = event.target.getAttribute("data-id");
-          const { data, error } = await app.api.database.delete.post({id: +id});
+          const id = (event.target as HTMLInputElement).getAttribute("data-id");
+          if (!id) return;
+          const { data, error } = await app.api.database.delete.post({ id: +id });
           if (error) throw error;
-          if(data.success) {
+          if (data.success) {
             Swal.fire({
               position: "center",
               icon: "success",
@@ -162,56 +167,67 @@ const databases = await app.api.database.get();
               </thead>
               <tbody>
                 {
-                  databases.data.map((database, index) => (
-                    <tr>
-                      <td>{index + 1}</td>
-                      <td>{database.database}</td>
-                      <td>{database.host}</td>
-                      <td>{database.user}</td>
-                      <td>
-                        <select class="form-control backup-select" data-id={database.id}>
-                          <option value="daily" selected={database.backup === "daily"}>
-                            Daily
-                          </option>
-                          <option value="weekly" selected={database.backup === "weekly"}>
-                            Weekly
-                          </option>
-                        </select>
-                      </td>
-                      <td>
-                        <div class="dropdown d-inline-block">
-                          <button
-                            class="btn btn-soft-secondary btn-sm dropdown"
-                            type="button"
-                            data-bs-toggle="dropdown"
-                            aria-expanded="false"
+                  databases &&
+                    databases.data &&
+                    databases.data.map((database, index) => (
+                      <tr>
+                        <td>{index + 1}</td>
+                        <td>{database.database}</td>
+                        <td>{database.host}</td>
+                        <td>{database.user}</td>
+                        <td>
+                          <select
+                            class="form-control backup-select"
+                            data-id={database.id}
                           >
-                            <i class="ri-more-fill align-middle" />
-                          </button>
-                          <ul class="dropdown-menu dropdown-menu-end">
-                            <li>
-                              <a
-                                href={`/api/database/download/${database.id}`}
-                                class="dropdown-item"
-                              >
-                                <i class="ri-download-fill align-bottom me-2 text-muted" />{" "}
-                                Download
-                              </a>
-                            </li>
-                            <li>
-                              <a
-                                class="dropdown-item remove-item-btn"
-                                data-id={database.id}
-                              >
-                                <i class="ri-delete-bin-fill align-bottom me-2 text-muted" />{" "}
-                                Delete
-                              </a>
-                            </li>
-                          </ul>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                            <option
+                              value={EBackup.DAILY}
+                              selected={database.backup === EBackup.DAILY}
+                            >
+                              Daily
+                            </option>
+                            <option
+                              value={EBackup.WEEKLY}
+                              selected={database.backup === EBackup.WEEKLY}
+                            >
+                              Weekly
+                            </option>
+                          </select>
+                        </td>
+                        <td>
+                          <div class="dropdown d-inline-block">
+                            <button
+                              class="btn btn-soft-secondary btn-sm dropdown"
+                              type="button"
+                              data-bs-toggle="dropdown"
+                              aria-expanded="false"
+                            >
+                              <i class="ri-more-fill align-middle" />
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                              <li>
+                                <a
+                                  href={`/api/database/download/${database.id}`}
+                                  class="dropdown-item"
+                                >
+                                  <i class="ri-download-fill align-bottom me-2 text-muted" />{" "}
+                                  Download
+                                </a>
+                              </li>
+                              <li>
+                                <a
+                                  class="dropdown-item remove-item-btn"
+                                  data-id={database.id}
+                                >
+                                  <i class="ri-delete-bin-fill align-bottom me-2 text-muted" />{" "}
+                                  Delete
+                                </a>
+                              </li>
+                            </ul>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
                 }
               </tbody>
             </table>

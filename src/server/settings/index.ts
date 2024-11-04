@@ -42,6 +42,7 @@ export const settingRoutes = new Elysia().group("/setting", (app) => {
                   ])
                 ),
             ]);
+            console.log(databases, settings)
           } catch (err) {
             console.log(err);
           }

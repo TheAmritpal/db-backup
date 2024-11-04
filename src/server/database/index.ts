@@ -6,7 +6,6 @@ import { createConnection } from "mysql2/promise";
 import type { DatabaseRow } from "./database.type";
 import { and, eq } from "drizzle-orm";
 import { authGuard } from "@/lib/authGuard";
-import { $, readableStreamToArray, spawn } from "bun";
 
 export const databaseRoutes = new Elysia().group("/database", (app) =>
   app
@@ -41,7 +40,7 @@ export const databaseRoutes = new Elysia().group("/database", (app) =>
 
           const command = ["mysqldump", "-u", dbUser, `-p${dbPassword}`, dbName];
 
-          const result = await Bun.spawn(command, {
+          const result = Bun.spawn(command, {
             stdout: outputFile,
           });
 

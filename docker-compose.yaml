@@ -1,0 +1,17 @@
+version: "3.8"
+services:
+  dbbackup:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./public:/app/public
+      - ./database:/app/database
+    env_file:
+      - .env
+    ports:
+      - 4321:4321
+    restart: always
+
+volumes:
+  bookclub-postgres-data:
