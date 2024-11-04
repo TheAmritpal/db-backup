@@ -11,8 +11,8 @@ import AdminLayout from "@/layouts/AdminLayout.astro";
   import type { App } from "@/server/elysia";
   import Swal from "sweetalert2";
   const protocol = window.location.protocol === "http:" ? "http": "https"
-  const host = `${protocol}://${window.location.host}`
-  const app = treaty<App>(host);
+  const hostname = `${protocol}://${window.location.host}`
+  const app = treaty<App>(hostname);
   const addDatabaseForm = document.querySelector<HTMLElement>("#addDatabaseForm");
   const host = document.querySelector<HTMLInputElement>("#host");
   const user = document.querySelector<HTMLInputElement>("#user");

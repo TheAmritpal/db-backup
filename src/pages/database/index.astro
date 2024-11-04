@@ -17,8 +17,8 @@ const databases = await app.api.database.index.get();
   import { treaty } from "@elysiajs/eden";
   import Swal from "sweetalert2";
   const protocol = window.location.protocol === "http:" ? "http": "https"
-  const host = `${protocol}://${window.location.host}`
-  const app = treaty<App>(host);
+  const hostname = `${protocol}://${window.location.host}`
+  const app = treaty<App>(hostname);
   const backupSelect = document.querySelectorAll<HTMLInputElement>(".backup-select");
   backupSelect.forEach((select: HTMLInputElement) => {
     select.addEventListener("change", async (event: Event) => {
