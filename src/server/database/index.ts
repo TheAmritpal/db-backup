@@ -6,14 +6,63 @@ import { createConnection } from "mysql2/promise";
 import type { DatabaseRow } from "./database.type";
 import { and, eq } from "drizzle-orm";
 import { authGuard } from "@/lib/authGuard";
+import { $, readableStreamToArray, spawn } from "bun";
 
 export const databaseRoutes = new Elysia().group("/database", (app) =>
   app
     .decorate("db", new DatabaseConfig())
-    .get("", async ({ db }) => {
+    .get("/", async ({ db }) => {
       const databases = await db.drizzle.query.database.findMany();
       return databases;
     })
+    .get(
+      "/download/:id",
+      async ({ db, error, params, redirect }) => {
+        try {
+          const checkDatabase = await db.drizzle
+            .select()
+            .from(schema.database)
+            .where(eq(schema.database.id, params.id));
+          if (!checkDatabase.length) {
+            return redirect("https://localhost:4321/database");
+          }
+
+          const dbUser = checkDatabase[0].user;
+          const dbPassword = checkDatabase[0].password;
+          const dbName = checkDatabase[0].database;
+
+          const date = new Date();
+
+          const outputFilePath = `./databases/${dbName}_backup_${date
+            .toLocaleDateString()
+            .replaceAll("/", "_")}.sql`;
+
+          const outputFile = Bun.file(outputFilePath);
+
+          const command = ["mysqldump", "-u", dbUser, `-p${dbPassword}`, dbName];
+
+          const result = await Bun.spawn(command, {
+            stdout: outputFile,
+          });
+
+          if (result.exitCode !== 0) {
+            console.error("Database dump failed");
+          } else {
+            console.log("Database dump successful!");
+          }
+        } catch (err) {
+          console.log(err);
+          return error(500, {
+            message: err,
+          });
+        }
+      },
+      {
+        params: t.Object({
+          id: t.Number({ error: "Id is required" }),
+        }),
+      }
+    )
     .use(authGuard)
     .post(
       "/delete",
