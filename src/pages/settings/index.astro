@@ -37,7 +37,9 @@ if (showButton)
     GOOGLE_CLIENT_SECRET,
     GOOGLE_REDIRECT_URI,
   } from "@/server/settings/setting.constant";
-  const app = treaty<App>(window.location.host);
+  const protocol = window.location.protocol === "http:" ? "http": "https"
+  const host = `${protocol}://${window.location.host}`
+  const app = treaty<App>(host);
   const settingsForm = document.querySelector<HTMLElement>("#settingsForm");
   const google_client_id = document.querySelector<HTMLInputElement>(
     `#${GOOGLE_CLIENT_ID}`

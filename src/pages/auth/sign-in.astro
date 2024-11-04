@@ -6,8 +6,9 @@ import AuthLayout from "@/layouts/AuthLayout.astro";
   import { treaty } from "@elysiajs/eden";
   import type { App } from "@/server/elysia";
   import Swal from "sweetalert2";
-
-  const app = treaty<App>(window.location.host);
+  const protocol = window.location.protocol === "http:" ? "http": "https"
+  const host = `${protocol}://${window.location.host}`
+  const app = treaty<App>(host);
   const loginForm = document.querySelector("#loginForm");
   const email = document.querySelector<HTMLInputElement>("#email");
   const password = document.querySelector<HTMLInputElement>("#password");
@@ -44,9 +45,10 @@ import AuthLayout from "@/layouts/AuthLayout.astro";
               }
             | string;
         };
-        const errorMessage = typeof customError.value === 'string' 
-    ? customError.value 
-    : customError.value.message[0];
+        const errorMessage =
+          typeof customError.value === "string"
+            ? customError.value
+            : customError.value.message[0];
         Swal.fire({
           position: "center",
           icon: "error",
@@ -55,7 +57,7 @@ import AuthLayout from "@/layouts/AuthLayout.astro";
           timer: 2000,
           showCloseButton: true,
         });
-    }
+      }
     });
   }
 </script>

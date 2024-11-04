@@ -16,7 +16,9 @@ const databases = await app.api.database.index.get();
   import { EBackup } from "@/db/utils/EBackup.enum";
   import { treaty } from "@elysiajs/eden";
   import Swal from "sweetalert2";
-  const app = treaty<App>(window.location.host);
+  const protocol = window.location.protocol === "http:" ? "http": "https"
+  const host = `${protocol}://${window.location.host}`
+  const app = treaty<App>(host);
   const backupSelect = document.querySelectorAll<HTMLInputElement>(".backup-select");
   backupSelect.forEach((select: HTMLInputElement) => {
     select.addEventListener("change", async (event: Event) => {
