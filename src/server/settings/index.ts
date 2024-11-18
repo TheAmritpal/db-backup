@@ -5,6 +5,8 @@ import { eq, inArray } from "drizzle-orm";
 import { authGuard } from "@/lib/authGuard";
 import { _updateSettings } from "@/server/settings/validation";
 import {
+  DRIVE_FOLDER_ID,
+  DRIVE_FOLDER_NAME,
   GOOGLE_ACCESS_TOKEN,
   GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET,
@@ -42,7 +44,7 @@ export const settingRoutes = new Elysia().group("/setting", (app) => {
                   ])
                 ),
             ]);
-            console.log(databases, settings)
+            console.log(databases, settings);
           } catch (err) {
             console.log(err);
           }
@@ -141,12 +143,14 @@ export const settingRoutes = new Elysia().group("/setting", (app) => {
               GOOGLE_CLIENT_SECRET,
               GOOGLE_REDIRECT_URI,
               GOOGLE_REFRESH_TOKEN,
+              DRIVE_FOLDER_ID,
             ])
           );
         let google_client_id: string = "";
         let google_client_secret: string = "";
         let google_redirect_uri: string = "";
         let google_refresh_token: string = "";
+        let drive_folder_id: string = "";
         for await (const setting of settings) {
           if (setting.name === GOOGLE_CLIENT_ID && setting.value)
             google_client_id = setting.value;
@@ -156,6 +160,8 @@ export const settingRoutes = new Elysia().group("/setting", (app) => {
             google_redirect_uri = setting.value;
           if (setting.name === GOOGLE_REFRESH_TOKEN && setting.value)
             google_refresh_token = setting.value;
+          if (setting.name === DRIVE_FOLDER_ID && setting.value)
+            drive_folder_id = setting.value;
         }
         if (
           !google_client_id ||
@@ -170,7 +176,11 @@ export const settingRoutes = new Elysia().group("/setting", (app) => {
           google_redirect_uri,
           google_refresh_token
         );
-        await googleOAuth.uploadDatabase();
+        let folderId = await googleOAuth.checkFolderByName(DRIVE_FOLDER_NAME);
+        if (!folderId) {
+          folderId = await googleOAuth.createFolder(DRIVE_FOLDER_NAME);
+        }
+        // await googleOAuth.uploadDatabase(folderId);
         return { success: true };
       } catch (error) {
         return { success: false, message: [error] };

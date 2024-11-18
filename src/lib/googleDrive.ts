@@ -33,16 +33,44 @@ export class GoogleOAuth {
     });
   }
 
+  async checkFolderByName(name: string): Promise<string | null> {
+    if (!this.#drive) await this.initDrive();
+    const folders = await this.#drive.files.list({
+      q: "mimeType='application/vnd.google-apps.folder'",
+      fields: "nextPageToken, files(id, name)",
+      spaces: "drive",
+    });
+    if (folders.status !== 200 || !folders.data.files) return null;
+    const checkFolder = folders.data.files.filter((file) => file.name === name);
+    return checkFolder?.[0]?.id || null;
+  }
+
+  async createFolder(folderName: string): Promise<string> {
+    try {
+      if (!this.#drive) await this.initDrive();
+      const file = await this.#drive.files.create({
+        requestBody: {
+          name: folderName,
+          mimeType: "application/vnd.google-apps.folder",
+        },
+        fields: "id",
+      });
+      if (file.status !== 200) throw new Error("Unable to call create folder api");
+      if (!file.data.id) throw new Error("Folder not created");
+      return file.data.id;
+    } catch (error) {
+      throw new Error("Unable to create folder");
+    }
+  }
+
   async uploadDatabase() {
     try {
       if (!this.#drive) await this.initDrive();
-      const checkFolder = await this.#drive.files.list({
-        q: "mimeType='application/vnd.google-apps.folder'",
-        fields: "nextPageToken, files(id, name)",
-        spaces: "drive",
-      });
-      console.log("console.log(checkFolder);", checkFolder);
-      // const response = await this.#drive.files.create;
+      // const media = {
+      //   mimeType: "application/sql",
+      //   body: Bun.file
+      // }
+      const response = await this.#drive.files.create({});
     } catch (err) {
       console.log(err);
     }
