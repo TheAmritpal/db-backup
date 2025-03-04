@@ -5,8 +5,15 @@
     {
       "idx": 0,
       "version": "5",
-      "when": 1724684460440,
-      "tag": "0000_pink_makkari",
+      "when": 1741024594680,
+      "tag": "0000_dusty_thunderbolt",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1741107115305,
+      "tag": "0001_late_black_bolt",
       "breakpoints": true
     }
   ]

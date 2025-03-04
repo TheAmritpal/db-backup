@@ -2,7 +2,7 @@ import Elysia, { t } from "elysia";
 import * as schema from "@/db/schema";
 import { _checkDatabase } from "./validation";
 import { DatabaseConfig } from "@/db";
-import { createConnection } from "mysql2/promise";
+import { createConnection, type ConnectionOptions } from "mysql2/promise";
 import type { DatabaseRow } from "./database.type";
 import { and, eq } from "drizzle-orm";
 import { authGuard } from "@/lib/authGuard";
@@ -123,7 +123,12 @@ export const databaseRoutes = new Elysia().group("/database", (app) =>
       "/check",
       async ({ body, db, error }) => {
         try {
-          const connection = await createConnection(body);
+          const connectionData = {
+            host: body.host,
+            user: body.user,
+            password: body.password,
+          } as ConnectionOptions;
+          const connection = await createConnection(connectionData);
           const [rows] = await connection.query<DatabaseRow[]>({
             sql: `SELECT SCHEMA_NAME FROM 
               INFORMATION_SCHEMA.SCHEMATA WHERE 
@@ -148,9 +153,9 @@ export const databaseRoutes = new Elysia().group("/database", (app) =>
             }
           }
           return response;
-        } catch (err) {
+        } catch (err: any) {
           return error(500, {
-            message: err,
+            message: [err.message],
           });
         }
       },
@@ -175,7 +180,12 @@ export const databaseRoutes = new Elysia().group("/database", (app) =>
             );
           if (!checkDatabaseExists.length)
             await db.drizzle.insert(schema.database).values(body);
-          return { success: true, message: ["Database Added"] };
+          return new Response(
+            JSON.stringify({ success: true, message: ["Database Added"] }),
+            {
+              headers: { "Content-Type": "application/json" },
+            }
+          );
         } catch (err) {
           return error(500, {
             message: err,

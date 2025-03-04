@@ -10,14 +10,14 @@ import AdminLayout from "@/layouts/AdminLayout.astro";
   import { treaty } from "@elysiajs/eden";
   import type { App } from "@/server/elysia";
   import Swal from "sweetalert2";
-  const protocol = window.location.protocol === "http:" ? "http": "https"
-  const hostname = `${protocol}://${window.location.host}`
+  const protocol = window.location.protocol === "http:" ? "http" : "https";
+  const hostname = `${protocol}://${window.location.host}`;
   const app = treaty<App>(hostname);
   const addDatabaseForm = document.querySelector<HTMLElement>("#addDatabaseForm");
   const host = document.querySelector<HTMLInputElement>("#host");
   const user = document.querySelector<HTMLInputElement>("#user");
   const pass = document.querySelector<HTMLInputElement>("#pass");
-  const db = document.querySelector<HTMLInputElement>("#database");
+
   const database = document.querySelector<HTMLElement>(".database-select");
   const submitBtn = document.querySelector<HTMLElement>(".submitBtn");
   if (addDatabaseForm) {
@@ -31,6 +31,9 @@ import AdminLayout from "@/layouts/AdminLayout.astro";
             icon: "error",
           });
         }
+
+        const db = document.querySelector<HTMLInputElement>("#database");
+
         const postData: any = {
           host: host.value,
           password: pass.value,
@@ -47,7 +50,20 @@ import AdminLayout from "@/layouts/AdminLayout.astro";
           data = res.data;
           error = res.error;
         }
-        if (data) {
+        if (error) throw error;
+        if (data.success) {
+          Swal.fire({
+            position: "center",
+            icon: "success",
+            title: data.message[0],
+            showConfirmButton: false,
+            timer: 2000,
+            showCloseButton: true,
+          });
+          setTimeout(() => {
+            window.location.href = "/database";
+          }, 1000);
+        } else if (data) {
           if (database) {
             database.classList.remove("d-none");
             const select = database.querySelector<HTMLSelectElement>("select");
@@ -73,8 +89,7 @@ import AdminLayout from "@/layouts/AdminLayout.astro";
               }
             }
           }
-        } else if (data.success) window.location.href = "/database";
-        if (error) throw error;
+        }
       } catch (error) {
         const customError = error as {
           status: number;
@@ -85,6 +100,7 @@ import AdminLayout from "@/layouts/AdminLayout.astro";
               }
             | string;
         };
+        console.log(JSON.stringify(customError), "error");
         const errorMessage =
           typeof customError.value === "string"
             ? customError.value

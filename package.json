@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@astrojs/check": "0.9.4",
-    "@elysiajs/cron": "^1.1.1",
+    "@elysiajs/cron": "^1.2.0",
     "@elysiajs/eden": "^1.1.2",
     "@lucia-auth/adapter-drizzle": "^1.1.0",
     "@nurodev/astro-bun": "^1.1.5",

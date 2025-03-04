@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "e743cb01-b68b-46a0-81ea-d435ecd4d8d7",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "6eff39d1-e0a0-49d7-ac9b-3e0a07bdd864",
+  "prevId": "e743cb01-b68b-46a0-81ea-d435ecd4d8d7",
   "tables": {
     "session": {
       "name": "session",
@@ -85,7 +85,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'2025-03-03 17:56:34.662'"
+          "default": "'2025-03-04 16:51:55.283'"
         },
         "updated_at": {
           "name": "updated_at",
@@ -93,7 +93,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'2025-03-03 17:56:34.662'"
+          "default": "'2025-03-04 16:51:55.283'"
         }
       },
       "indexes": {},
@@ -160,6 +160,13 @@
           "notNull": false,
           "autoincrement": false
         },
+        "last_backup_date": {
+          "name": "last_backup_date",
+          "type": "datetime",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "backup": {
           "name": "backup",
           "type": "enum('daily','weekly')",
@@ -174,7 +181,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'2025-03-03 17:56:34.669'"
+          "default": "'2025-03-04 16:51:55.289'"
         },
         "updated_at": {
           "name": "updated_at",
@@ -182,7 +189,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'2025-03-03 17:56:34.669'"
+          "default": "'2025-03-04 16:51:55.289'"
         }
       },
       "indexes": {},

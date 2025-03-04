@@ -2,6 +2,8 @@ import { Elysia } from "elysia";
 import { authRoutes } from "@/server/auth";
 import { databaseRoutes } from "@/server/database";
 import { settingRoutes } from "@/server/settings";
+import cron, { Patterns } from "@elysiajs/cron";
+import dbCron from "@/lib/cron";
 
 export const app = new Elysia({ prefix: "/api" })
   .onError(({ error, code }) => {
@@ -23,6 +25,13 @@ export const app = new Elysia({ prefix: "/api" })
   })
   .use(authRoutes)
   .use(databaseRoutes)
-  .use(settingRoutes);
+  .use(settingRoutes)
+  .use(
+    cron({
+      name: "DB Backup Cron",
+      pattern: Patterns.EVERY_DAY_AT_MIDNIGHT,
+      run: dbCron,
+    })
+  );
 
 export type App = typeof app;

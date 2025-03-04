@@ -5,52 +5,18 @@ import { eq, inArray } from "drizzle-orm";
 import { authGuard } from "@/lib/authGuard";
 import { _updateSettings } from "@/server/settings/validation";
 import {
-  DRIVE_FOLDER_ID,
-  DRIVE_FOLDER_NAME,
   GOOGLE_ACCESS_TOKEN,
   GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET,
   GOOGLE_REDIRECT_URI,
   GOOGLE_REFRESH_TOKEN,
 } from "@/server/settings/setting.constant";
-import cron, { Patterns } from "@elysiajs/cron";
-import { EBackup } from "@/db/utils/EBackup.enum";
 import { GoogleOAuth } from "@/lib/googleDrive";
 
 export const settingRoutes = new Elysia().group("/setting", (app) => {
   const db = new DatabaseConfig();
   return app
     .decorate("db", db)
-    .use(
-      cron({
-        name: EBackup.DAILY,
-        pattern: Patterns.daily(),
-        async run() {
-          try {
-            const [databases, settings] = await Promise.all([
-              db.drizzle
-                .select()
-                .from(schema.database)
-                .where(eq(schema.database.backup, EBackup.DAILY)),
-              db.drizzle
-                .select()
-                .from(schema.setting)
-                .where(
-                  inArray(schema.setting.name, [
-                    GOOGLE_CLIENT_ID,
-                    GOOGLE_CLIENT_SECRET,
-                    GOOGLE_REDIRECT_URI,
-                    GOOGLE_ACCESS_TOKEN,
-                  ])
-                ),
-            ]);
-            console.log(databases, settings);
-          } catch (err) {
-            console.log(err);
-          }
-        },
-      })
-    )
     .get("/", async ({ db }) => {
       const settings = await db.drizzle
         .select()
@@ -90,7 +56,7 @@ export const settingRoutes = new Elysia().group("/setting", (app) => {
         await db.drizzle.insert(schema.setting).values({
           name: GOOGLE_ACCESS_TOKEN,
           value: query.code,
-          description: GOOGLE_ACCESS_TOKEN,
+          description: "Google Access Token",
         });
 
       let google_client_id: string = "";
@@ -131,60 +97,6 @@ export const settingRoutes = new Elysia().group("/setting", (app) => {
         });
 
       return redirect("http://localhost:4321/settings");
-    })
-    .get("/check", async ({ db }) => {
-      try {
-        const settings = await db.drizzle
-          .select()
-          .from(schema.setting)
-          .where(
-            inArray(schema.setting.name, [
-              GOOGLE_CLIENT_ID,
-              GOOGLE_CLIENT_SECRET,
-              GOOGLE_REDIRECT_URI,
-              GOOGLE_REFRESH_TOKEN,
-              DRIVE_FOLDER_ID,
-            ])
-          );
-        let google_client_id: string = "";
-        let google_client_secret: string = "";
-        let google_redirect_uri: string = "";
-        let google_refresh_token: string = "";
-        let drive_folder_id: string = "";
-        for await (const setting of settings) {
-          if (setting.name === GOOGLE_CLIENT_ID && setting.value)
-            google_client_id = setting.value;
-          if (setting.name === GOOGLE_CLIENT_SECRET && setting.value)
-            google_client_secret = setting.value;
-          if (setting.name === GOOGLE_REDIRECT_URI && setting.value)
-            google_redirect_uri = setting.value;
-          if (setting.name === GOOGLE_REFRESH_TOKEN && setting.value)
-            google_refresh_token = setting.value;
-          if (setting.name === DRIVE_FOLDER_ID && setting.value)
-            drive_folder_id = setting.value;
-        }
-        if (
-          !google_client_id ||
-          !google_client_secret ||
-          !google_redirect_uri ||
-          !google_refresh_token
-        )
-          return;
-        const googleOAuth = new GoogleOAuth(
-          google_client_id,
-          google_client_secret,
-          google_redirect_uri,
-          google_refresh_token
-        );
-        let folderId = await googleOAuth.checkFolderByName(DRIVE_FOLDER_NAME);
-        if (!folderId) {
-          folderId = await googleOAuth.createFolder(DRIVE_FOLDER_NAME);
-        }
-        // await googleOAuth.uploadDatabase(folderId);
-        return { success: true };
-      } catch (error) {
-        return { success: false, message: [error] };
-      }
     })
     .use(authGuard)
     .post(
