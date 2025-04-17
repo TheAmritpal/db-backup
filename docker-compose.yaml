@@ -4,6 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: dbbackup
     volumes:
       - ./public:/app/public
       - ./database:/app/database
@@ -14,4 +15,5 @@ services:
     restart: always
 
 volumes:
-  bookclub-postgres-data:
+  dbbackup:
+    driver: local
