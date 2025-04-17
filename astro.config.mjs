@@ -6,4 +6,7 @@ import bun from "@nurodev/astro-bun";
 export default defineConfig({
   adapter: bun(),
   output: "server",
+  server: {
+    port: Number(import.meta.env.PORT) || 4321,
+  }
 });
