@@ -16,14 +16,16 @@ export const databaseRoutes = new Elysia().group("/database", (app) =>
     })
     .get(
       "/download/:id",
-      async ({ db, error, params, redirect }) => {
+      async ({ db, params, set }) => {
         try {
           const checkDatabase = await db.drizzle
             .select()
             .from(schema.database)
             .where(eq(schema.database.id, params.id));
           if (!checkDatabase.length) {
-            return redirect("https://localhost:4321/database");
+            set.headers["Location"] = "https://localhost:4321/database";
+            set.status = 302;
+            return "Redirecting...";
           }
 
           const dbUser = checkDatabase[0].user;
@@ -36,24 +38,42 @@ export const databaseRoutes = new Elysia().group("/database", (app) =>
             .toLocaleDateString()
             .replaceAll("/", "_")}.sql`;
 
-          const outputFile = Bun.file(outputFilePath);
-
-          const command = ["mysqldump", "-u", dbUser, `-p${dbPassword}`, dbName];
+          const command = ["/usr/bin/mysqldump", "-u", dbUser, `-p${dbPassword}`, dbName];
 
           const result = Bun.spawn(command, {
-            stdout: outputFile,
+            stdout: Bun.file(outputFilePath),
           });
+
+          await result.exited;
 
           if (result.exitCode !== 0) {
             console.error("Database dump failed");
+            set.status = 500;
+            return { success: false, message: "Database dump failed" };
           } else {
             console.log("Database dump successful!");
+            
+            // Read the generated file and return it
+            const file = Bun.file(outputFilePath);
+            const exists = await file.exists();
+            
+            if (!exists) {
+              set.status = 500;
+              return { success: false, message: "Backup file was not created" };
+            }
+
+            const fileContent = await file.arrayBuffer();
+            const fileName = `${dbName}_backup_${date.toLocaleDateString().replaceAll("/", "_")}.sql`;
+            
+            set.headers["Content-Type"] = "application/sql";
+            set.headers["Content-Disposition"] = `attachment; filename="${fileName}"`;
+            
+            return new Response(fileContent);
           }
-        } catch (err) {
-          console.log(err);
-          return error(500, {
-            message: err,
-          });
+        } catch (err: any) {
+          console.error("Error in database download:", err);
+          set.status = 500;
+          return { success: false, message: err.message || "Internal server error" };
         }
       },
       {
@@ -65,16 +85,18 @@ export const databaseRoutes = new Elysia().group("/database", (app) =>
     .use(authGuard)
     .post(
       "/delete",
-      async ({ body, db, error }) => {
+      async ({ body, db, set }) => {
         const checkDatabase = await db.drizzle
           .select()
           .from(schema.database)
           .where(eq(schema.database.id, body.id));
-        if (!checkDatabase.length)
-          return error(400, {
+        if (!checkDatabase.length) {
+          set.status = 400;
+          return {
             success: false,
             message: ["Database Not Found"],
-          });
+          };
+        }
         await db.drizzle.delete(schema.database).where(eq(schema.database.id, body.id));
         return { success: true, message: ["Database Deleted"] };
       },
@@ -86,33 +108,37 @@ export const databaseRoutes = new Elysia().group("/database", (app) =>
     )
     .post(
       "/change-backup",
-      async ({ body, db, error }) => {
+      async ({ body, db, set }) => {
         try {
           console.log(body, "body");
           if (!body.id) {
-            return error(400, {
+            set.status = 400;
+            return {
               success: false,
               message: ["Id is required"],
-            });
+            };
           }
           const checkDatabase = await db.drizzle
             .select()
             .from(schema.database)
             .where(eq(schema.database.id, body.id));
-          if (!checkDatabase.length)
-            return error(400, {
+          if (!checkDatabase.length) {
+            set.status = 400;
+            return {
               success: false,
               message: ["Database not found"],
-            });
+            };
+          }
           await db.drizzle
             .update(schema.database)
             .set({ backup: body.backup })
             .where(eq(schema.database.id, body.id));
           return { success: true, message: ["Backup Updated"] };
-        } catch (err) {
-          return error(500, {
-            message: err,
-          });
+        } catch (err: any) {
+          set.status = 500;
+          return {
+            message: err.message || "Internal server error",
+          };
         }
       },
       {
@@ -121,7 +147,7 @@ export const databaseRoutes = new Elysia().group("/database", (app) =>
     )
     .post(
       "/check",
-      async ({ body, db, error }) => {
+      async ({ body, db, set }) => {
         try {
           const connectionData = {
             host: body.host,
@@ -154,9 +180,10 @@ export const databaseRoutes = new Elysia().group("/database", (app) =>
           }
           return response;
         } catch (err: any) {
-          return error(500, {
+          set.status = 500;
+          return {
             message: [err.message],
-          });
+          };
         }
       },
       {
@@ -165,7 +192,7 @@ export const databaseRoutes = new Elysia().group("/database", (app) =>
     )
     .post(
       "/create",
-      async ({ body, db, error }) => {
+      async ({ body, db, set }) => {
         try {
           const checkDatabaseExists = await db.drizzle
             .select()
@@ -186,10 +213,11 @@ export const databaseRoutes = new Elysia().group("/database", (app) =>
               headers: { "Content-Type": "application/json" },
             }
           );
-        } catch (err) {
-          return error(500, {
-            message: err,
-          });
+        } catch (err: any) {
+          set.status = 500;
+          return {
+            message: err.message || "Internal server error",
+          };
         }
       },
       {

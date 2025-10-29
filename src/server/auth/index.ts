@@ -9,16 +9,21 @@ export const authRoutes = new Elysia().group("/auth", (app) =>
     .decorate("db", new DatabaseConfig())
     .post(
       "/sign-in",
-      async ({ body, db, cookie, error }) => {
+      async ({ body, db, cookie, set }) => {
         try {
           const { email, password } = body;
           const user = await db.drizzle.query.user.findFirst({
             where: eq(schema.user.email, email),
           });
-          if (!user) return error(404, { success: false, message: ["Email not found"] });
+          if (!user) {
+            set.status = 404;
+            return { success: false, message: ["Email not found"] };
+          }
           const isValid = await Bun.password.verify(password, user.password);
-          if (!isValid)
-            return error(403, { success: false, message: ["Incorrect Password"] });
+          if (!isValid) {
+            set.status = 403;
+            return { success: false, message: ["Incorrect Password"] };
+          }
           const session = await lucia.createSession(user.id, {
             sessionId: user.id.toString(),
           });
@@ -30,7 +35,8 @@ export const authRoutes = new Elysia().group("/auth", (app) =>
           return { success: true, message: ["Login Success"] };
         } catch (err) {
           console.log(err);
-          return error(500, { message: err });
+          set.status = 500;
+          return { success: false, message: [err instanceof Error ? err.message : "Internal server error"] };
         }
       },
       {

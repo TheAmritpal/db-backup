@@ -1,4 +1,3 @@
-version: "3.8"
 services:
   dbbackup:
     build:
@@ -8,6 +7,7 @@ services:
     volumes:
       - ./public:/app/public
       - ./database:/app/database
+      - ./databases:/app/databases
     env_file:
       - .env
     ports:

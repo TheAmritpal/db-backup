@@ -10,7 +10,7 @@ export async function generateMySQLDump(
   const MYSQL_HOST = mysqlUserIformation.host;
 
   const dumpCommand = [
-    "mysqldump",
+    "/usr/bin/mysqldump",
     `-u${MYSQL_USER}`,
     `-p${MYSQL_PASSWORD}`,
     `-h${MYSQL_HOST}`,
