@@ -29,7 +29,7 @@ export const app = new Elysia({ prefix: "/api" })
   .use(
     cron({
       name: "DB Backup Cron",
-      pattern: Patterns.EVERY_DAY_AT_MIDNIGHT,
+      pattern: Patterns.EVERY_5_MINUTES,
       run: dbCron,
     })
   );
