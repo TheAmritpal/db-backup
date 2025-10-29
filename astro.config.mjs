@@ -8,5 +8,6 @@ export default defineConfig({
   output: "server",
   server: {
     port: Number(import.meta.env.PORT) || 4321,
-  }
+    host: import.meta.env.HOST || "127.0.0.1",
+  },
 });
