@@ -9,5 +9,6 @@ export default defineConfig({
   server: {
     port: Number(import.meta.env.PORT) || 4321,
     host: import.meta.env.HOST || "127.0.0.1",
+    allowedHosts: ["dbbackup.amritpal.work", "localhost", "127.0.0.1"],
   },
 });
